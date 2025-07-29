@@ -1,0 +1,175 @@
+:root {
+    --primary-color: #28a745;
+    --secondary-color: #f8f9fa;
+    --text-color: #333;
+    --border-color: #ccc;
+    --hover-color: #218838; 
+    --main-text-color: #fff;
+    --drag-color: #e9ecef;
+    --box-shadow: rgba(0, 0, 0, 0.1);
+    --body-bg-color: #f4f4f4;
+    --header-color: #333;
+    --icon-color: #666;
+    --icon-hover-color: #000;
+    --done-color: gray;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--body-bg-color);
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    margin: 80px auto;
+    text-align: center;
+    background-color: var(--main-text-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--box-shadow);
+}
+
+.container h2 {
+    margin-bottom: 20px;
+    color: var(--header-color);
+    font-size: 28px;
+}
+
+.add-task {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.add-task input {
+    padding: 10px 15px;
+    width: 70%;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border 0.3s ease;
+}
+
+.add-task input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.add-task button {
+    font-size: 24px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--primary-color);
+    color: var(--main-text-color);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-task button:hover {
+    background-color: var(--hover-color);
+}
+
+ul#task-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    text-align: left;
+}
+
+ul#task-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: var(--secondary-color);
+    border-left: 5px solid var(--primary-color);
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+ul#task-list li:hover {
+    background-color: var(--drag-color);
+}
+
+
+.task-text {
+    flex: 1;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.actions i {
+    cursor: pointer;
+    color: var(--icon-color);
+    transition: color 0.2s ease;
+    font-size: 16px;
+}
+
+.actions i:hover {
+    color: var(--icon-hover-color);
+}
+
+.done .task-text {
+    text-decoration: line-through;
+    color: var(--done-color);
+}
+
+.edit-input {
+    width: 80%;
+    font-size: 16px;
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    outline: none;
+}
+
+.edit-input:focus {
+        border: 2px solid var(--primary-color);
+}
+
+li.dragging {
+  opacity: 0.5;
+  background-color: var(--drag-color);
+}
+
+.alert {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 350px;
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+    border: 3px solid var(--primary-color);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    transition: 0.3s;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
