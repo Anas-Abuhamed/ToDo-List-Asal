@@ -1,16 +1,20 @@
+// Delete & update popup, search, array for items, global tasks
 const addBtn = document.getElementById("add-btn");
 const taskInput = document.getElementById("task-input");
+const serachInput = document.getElementById("search-input")
 const taskList = document.getElementById("task-list");
-getTasksFromStorage().forEach((task) => {
+let tasks = getTasksFromStorage();  // Do global tasks, to just do like one request in whole project
+tasks.forEach((task) => { // Get Tasks from localStroge and view them in page
   taskList.appendChild(createItem(task));
 });
 taskInput.focus();
-taskList.addEventListener("click", function (e) {
+serachInput.addEventListener("input", function () { // Search event listener
+  search(serachInput)
+});
+taskList.addEventListener("click", function (e) { // Eventlisteners for actions events
   const li = e.target.closest("li");
   if (!li) return;
-
   const id = +li.dataset.id;
-
   if (e.target.classList.contains("complete")) {
     li.classList.toggle("done");
     doneLocalStorage(id, li);
@@ -21,19 +25,17 @@ taskList.addEventListener("click", function (e) {
   }
 
   if (e.target.classList.contains("delete")) {
-    li.remove();
-    const tasks = getTasksFromStorage().filter((t) => t.id !== id);
-    saveTasksToStorage(tasks);
+    deleteItem(li, id);
   }
 });
 
-addBtn.addEventListener("click", addItem);
-taskInput.addEventListener("keydown", function (e) {
+addBtn.addEventListener("click", addItem); // AddItem, it's text is what the user entered
+taskInput.addEventListener("keydown", function (e) { // AddItem, but with keys
   if (e.key === "Enter") addItem();
   else if (e.key === "Escape") taskInput.value = "";
 });
 
-function addItem() {
+function addItem() { // Handle addItem, and after that add it in storage with unique id using Date.now()
   const taskText = taskInput.value.trim();
   if (taskText === "") {
     const alert = document.querySelector(".alert");
@@ -46,14 +48,13 @@ function addItem() {
   }
 
   const task = { id: Date.now(), text: taskText, done: false };
-  const tasks = getTasksFromStorage();
   tasks.push(task);
   saveTasksToStorage(tasks);
   taskList.appendChild(createItem(task));
   taskInput.value = "";
 }
 
-function handleEdit(li, id) {
+function handleEdit(li, id) { // Edit task, by replace span with input to let user add edited text in it
   const span = li.querySelector(".task-text");
 
   if (li.querySelector(".edit-input")) return;
@@ -73,32 +74,57 @@ function handleEdit(li, id) {
     else if (e.key === "Escape") cancelEdit();
   });
 
-  function saveEdit() {
+  function saveEdit() { // To save edit, when user finished of editing
     if (editSaved) return;
     editSaved = true;
 
     const newText = input.value.trim();
-    if (newText !== "") {
-      span.textContent = newText;
+    if (newText === "") {
+      li.replaceChild(span, input);
+      return
     }
-    li.replaceChild(span, input);
+    showPopup("Are you sure you want to edit?", function (confirmed) {
+      if (confirmed) {
+        span.textContent = newText;
+        li.replaceChild(span, input);
 
-    const tasks = getTasksFromStorage();
-    const task = tasks.find((t) => t.id === id);
-    if (task) {
-      task.text = newText || task.text;
-      saveTasksToStorage(tasks);
-    }
+        const task = tasks.find((t) => t.id === id);
+        if (task) {
+          task.text = newText;
+          saveTasksToStorage(tasks);
+        }
+      } else {
+        li.replaceChild(span, input);
+      }
+    });
   }
 
-  function cancelEdit() {
+  function cancelEdit() { // If user want to stop edit action
     if (editSaved) return;
     editSaved = true;
     li.replaceChild(span, input);
   }
 }
 
-function createItem(task) {
+function deleteItem(item, id) { // To delete item, with popup for confirmation
+  showPopup("Are you sure you want delete ?", function (confirmed) {
+    if (confirmed) {
+      item.remove();
+      tasks = tasks.filter((t) => t.id !== id);
+      saveTasksToStorage(tasks);
+    }
+  })
+}
+function search(element) {
+  const query = element.value.trim().toLowerCase();
+  const tasks = taskList.querySelectorAll("li");
+  tasks.forEach((li) => {
+    const text = li.querySelector(".task-text")?.textContent.toLowerCase() || "";
+    li.style.display = text.includes(query) ? "" : "none"
+  })
+}
+
+function createItem(task) { // To add item in page
   const li = document.createElement("li");
   li.dataset.id = task.id;
   li.setAttribute("draggable", "true")
@@ -120,7 +146,7 @@ function createItem(task) {
   return li;
 }
 
-function createIcon(className) {
+function createIcon(className) { // To create icons actions in item
   const icon = document.createElement("i");
   icon.className = className;
   const parts = className.split(" ");
@@ -128,16 +154,15 @@ function createIcon(className) {
   return icon;
 }
 
-function getTasksFromStorage() {
+function getTasksFromStorage() { // get tasks from localStorage (as small database)
   return JSON.parse(localStorage.getItem("tasks")) || [];
 }
 
-function saveTasksToStorage(tasks) {
+function saveTasksToStorage(tasks) { // save updated tasks in localStorage
   localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
-function doneLocalStorage(id, li) {
-  const tasks = getTasksFromStorage();
+function doneLocalStorage(id, li) { // to update done flag for specific task
   const task = tasks.find((t) => t.id === id);
   if (task) {
     task.done = li.classList.contains("done");
@@ -145,12 +170,12 @@ function doneLocalStorage(id, li) {
   }
 }
 
-// Drag & Drop
 
+// Drag & Drop
 let draggedItem = null;
 let dragStartX = 0;
 
-taskList.addEventListener("dragstart", (e) => {
+taskList.addEventListener("dragstart", (e) => { // EventListener when user select item to drag it
   if (e.target.tagName === "LI") {
     draggedItem = e.target;
     dragStartX = e.clientX;
@@ -158,8 +183,8 @@ taskList.addEventListener("dragstart", (e) => {
   }
 });
 
-taskList.addEventListener("dragover", (e) => {
-  e.preventDefault(); 
+taskList.addEventListener("dragover", (e) => { // EventListener when user moving the element to drag it
+  e.preventDefault();
   const afterElement = getDragAfterElement(taskList, e.clientY);
   if (afterElement == null) {
     taskList.appendChild(draggedItem);
@@ -168,12 +193,12 @@ taskList.addEventListener("dragover", (e) => {
   }
 });
 
-taskList.addEventListener("drop", (e) => {
+taskList.addEventListener("drop", (e) => { // EventListener when user drag the element in valid place
   e.preventDefault();
   updateOrderInStorage();
 });
 
-taskList.addEventListener("dragend", (e) => {
+taskList.addEventListener("dragend", (e) => { // EventListener when drag operation end
   if (e.target.tagName === "LI") {
     draggedItem.classList.remove("dragging");
 
@@ -185,9 +210,7 @@ taskList.addEventListener("dragend", (e) => {
     if (deltaX > 100) {
       handleEdit(draggedItem, id);
     } else if (deltaX < -100) {
-      draggedItem.remove();
-      const tasks = getTasksFromStorage().filter((t) => t.id !== id);
-      saveTasksToStorage(tasks);
+      deleteItem(draggedItem, id)
     }
 
     updateOrderInStorage();
@@ -196,26 +219,65 @@ taskList.addEventListener("dragend", (e) => {
   }
 });
 
-function getDragAfterElement(container, y) {
+function getDragAfterElement(container, y) { // to see where the element dragged
   const draggableElements = Array.from(container.querySelectorAll("li:not(.dragging)"));
   for (const child of draggableElements) {
     const box = child.getBoundingClientRect();
     const center = box.top + box.height / 2;
     if (y < center) return child;
   }
-  return null; 
+  return null;
 }
 
-function updateOrderInStorage() {
+function updateOrderInStorage() { // After drag operation finished, it will update the order in task, then in local storage
   const newTasks = [];
   const items = taskList.querySelectorAll("li");
   items.forEach((li) => {
     newTasks.push({
       id: +li.dataset.id,
-      text: li.querySelector(".task-text").textContent,
+      text: li.querySelector(".task-text")?.textContent || li.querySelector(".edit-input")?.value,
       done: li.classList.contains("done"),
     });
   });
 
   saveTasksToStorage(newTasks);
 }
+
+// popup
+
+function showPopup(message, callback) { // popup for add & delete confirmation
+  const popup = document.querySelector(".popup");
+  popup.innerHTML = `
+    <div class="popup-overlay">
+      <div class="popup-content">
+        <p>${message}</p>
+        <button class="cancel btn">Cancel</button>
+        <button class="confirm btn">Confirm</button>
+      </div>
+    </div>
+  `;
+  popup.classList.add("show");
+
+  const cancelBtn = popup.querySelector(".cancel");
+  const confirmBtn = popup.querySelector(".confirm");
+
+  function close(result) { // To close popup
+    popup.classList.remove("show");
+    document.removeEventListener("keydown", handleKey);
+    callback(result);
+  }
+
+  cancelBtn.onclick = () => close(false);
+  confirmBtn.onclick = () => close(true);
+
+  function handleKey(e) { // for key actions
+    if (e.key === "Enter") {
+      close(true);
+    } else if (e.key === "Escape") {
+      close(false);
+    }
+  }
+
+  document.addEventListener("keydown", handleKey);
+}
+
